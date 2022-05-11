@@ -3,11 +3,19 @@ from math import *
 import random
 import numpy as np
 from scipy.interpolate import make_interp_spline
+import time
 
 llambda = 0.22 # angle of Cabibbo
 Delta_m_atm_square = 0.0025 # eV
 m0 = 0.035 # eV
 x = np.sqrt(Delta_m_atm_square/np.power(m0,2)-1)
+
+# NuFIT 5.1 (2021) without SKM
+# bfp, 1sigma range, 3sigma range
+theta_13_exp = np.array([8.62, 8.5, 8.74, 8.25, 8.98])
+theta_12_exp = np.array([33.45, 32.7, 34.22, 31.27, 35.87])
+theta_13_exp = theta_13_exp*np.pi/180
+theta_12_exp = theta_12_exp*np.pi/180
 
 Tan = []
 Sin = []
@@ -53,8 +61,8 @@ sin_linspace = np.linspace(0, sin_max, pas)
 
 def smooth(step_curve, step, occurences):
     curve_copy = np.copy(step_curve)
-    j_max = int(pas/20)
-    width_max = int(n/10)
+    j_max = int(pas/100)
+    width_max = (np.max(step_curve)-np.min(step_curve))/2
     for i in range(pas) :
         count = 0
         sum = 0
@@ -70,42 +78,62 @@ def smooth(step_curve, step, occurences):
             curve_copy[i] = sum/count
     return curve_copy
 
-Tan_ter = smooth(Tan_bis, pas, n)
-Sin_ter = smooth(Sin_bis, pas, n)
+def recur_smooth(step_curve, step, occurences, nb_recur) :
+    if nb_recur == 0 :
+        return smooth(step_curve, step, occurences)
+    else :
+        return recur_smooth(smooth(step_curve, step, occurences), step, occurences, nb_recur-1)
+
+Tan_ter = recur_smooth(Tan_bis, pas, n, 4)
+Sin_ter = recur_smooth(Sin_bis, pas, n, 4)
 
 im3 = plt.subplot(221)
-im3.scatter(np.power(Sin,2), Tan, s=1)
+im3.scatter(np.power(Sin,2), Tan, s=1, c='green', alpha=0.3)
 im3.set_xscale('log')
 im3.set_xlabel(r"$\sin^2(\theta_{13})$")
 im3.set_ylabel(r"$\tan(\theta_{12})$")
 im3.grid()
+im3.axhline(y=np.tan(theta_12_exp[0]), c="darkred", label=r"bfp NuFIT 5.1 w/o SKM")
+im3.axhspan(ymin=np.tan(theta_12_exp[3]), ymax=np.tan(theta_12_exp[4]), color='darkred', alpha=0.3, label=r"$3\sigma$ NuFIT 5.1 w/o SKM")
+im3.axvline(x=np.power(np.sin(theta_13_exp[0]),2), c="darkred")
+im3.axvspan(xmin=np.power(np.sin(theta_13_exp[3]),2), xmax=np.power(np.sin(theta_13_exp[4]),2), color='darkred', alpha=0.3)
+im3.legend()
 
-im3.text(100, 1.85, r"$n=$"+str(int(n/1000))+" thousands random occurences")
-im3.text(100, 1.7, r"$\lambda =$"+str(llambda))
-im3.text(100, 1.55, r"$x=$"+str(x))
+im3.text(100, 1.8, r"Low energy model plots, based on pp.65-75 of", fontsize='x-large')
+im3.text(100, 1.65, r"S. Marciano's Master Thesis", fontsize='x-large')
+im3.text(100, 1.2, r"Ranges and values of the parameters", fontweight='bold')
+im3.text(100, 1.05, r"$n=$"+str(int(n/1000))+" thousands random occurences")
+im3.text(100, 0.9, r"$\lambda =$"+str(llambda))
+im3.text(100, 0.75, r"$x=$"+str(x))
 if focus :
-    im3.text(100, 1.4, r"$\varphi_{22} \in [0,\pi/2] \ , \ \varphi_{23} \in [3\pi/2-0.2,3\pi/2+0.2] \ , \varphi_{32} \in [3\pi/2,2\pi]$")
+    im3.text(100, 0.6, r"$\varphi_{22} \in [0,\pi/2] \ , \ \varphi_{23} \in [3\pi/2-0.2,3\pi/2+0.2] \ , \varphi_{32} \in [3\pi/2,2\pi]$")
 else :
-    im3.text(100, 1.4, r"$\varphi_{22} \in [0,2\pi] \ , \ \varphi_{23} \in [0,2\pi] \ , \varphi_{32} \in [0,2\pi]$")
-im3.text(100, 1.25, r"$x_i\in [-\lambda,\lambda], \ \forall\ i \in \{1,2,3,4\}$")
-im3.text(100, 1.1, r"$a_{ij}\in [\lambda,3], \ \forall\ i,j \in \{1,2,3\}$")
+    im3.text(100, 0.6, r"$\varphi_{22} \in [0,2\pi] \ , \ \varphi_{23} \in [0,2\pi] \ , \varphi_{32} \in [0,2\pi]$")
+im3.text(100, 0.45, r"$x_i\in [-\lambda,\lambda], \ \forall\ i \in \{1,2,3,4\}$")
+im3.text(100, 0.3, r"$a_{ij}\in [\lambda,3], \ \forall\ i,j \in \{1,2,3\}$")
 
 im1 = plt.subplot(223)
-im1.hist(Tan, bins=20, range=(0,2), histtype='step', density=True, label='Density histogram')
+im1.hist(Tan, bins=50, range=(0,2), density=True, label='Density histogram', color='green', alpha=0.3)
 #im1.plot(tan_linspace, Tan_bis)
-im1.plot(tan_linspace, Tan_ter, label='Smoothed distribution')
+im1.plot(tan_linspace, Tan_ter, label='Smoothed distribution', c='green')
 im1.set_xlabel(r"$\tan(\theta_{12})$")
 im1.set_ylabel(r"Density of occurences")
 im1.grid()
+im1.axvline(x=np.tan(theta_12_exp[0]), c="darkred", label=r"bfp NuFIT 5.1 w/o SKM")
+im1.axvspan(xmin=np.tan(theta_12_exp[3]), xmax=np.tan(theta_12_exp[4]), color='darkred', alpha=0.3, label=r"$3\sigma$ NuFIT 5.1 w/o SKM")
 im1.legend()
 
 im2 = plt.subplot(224)
-im2.hist(Sin, bins=20, range=(0,1), histtype='step', density=True, label='Density histogram')
+im2.hist(Sin, bins=50, range=(0,1), density=True, label='Density histogram', color='green', alpha=0.3)
 #im2.plot(sin_linspace, Sin_bis)
-im2.plot(sin_linspace, Sin_ter, label='Smoothed distribution')
+im2.plot(sin_linspace, Sin_ter, label='Smoothed distribution', c='green')
 im2.set_xlabel(r"$\sin(\theta_{13})$")
 im2.set_ylabel(r"Density of occurences")
 im2.grid()
+im2.axvline(x=np.sin(theta_13_exp[0]), c="darkred", label=r"bfp NuFIT 5.1 w/o SKM")
+im2.axvspan(xmin=np.sin(theta_13_exp[3]), xmax=np.sin(theta_13_exp[4]), color='darkred', alpha=0.3, label=r"$3\sigma$ NuFIT 5.1 w/o SKM")
 im2.legend()
 
+#plt.suptitle(r"Low energy model plots, based on pp.65-75 of S. Marciano's Master Thesis")
 plt.show()
+#plt.savefig("graphes/"+str(time.time())+".pdf", format='pdf')
