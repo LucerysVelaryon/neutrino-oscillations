@@ -4,6 +4,7 @@ import random
 import numpy as np
 from scipy.interpolate import make_interp_spline
 import time
+import smooth_function as sm
 
 llambda = 0.22 # angle of Cabibbo
 Delta_m_atm_square = 0.0025 # eV
@@ -24,7 +25,7 @@ sin_max = 1
 pas = 1000
 Tan_bis = np.zeros(pas)
 Sin_bis = np.zeros(pas)
-n = 1000000
+n = 100000
 focus = True
 
 for i in range(n):
@@ -71,21 +72,112 @@ def smooth(step_curve, step, occurences):
             var_j -= 1
         while not((np.abs(step_curve[i+var_j]-step_curve[i]) < width_max) and (np.abs(step_curve[i-var_j]-step_curve[i]) < width_max)) :
             var_j -= 1
-        for j in range(-var_j,var_j) :
-            count += 1
-            sum += step_curve[i+j]
+        for j in range(-var_j,var_j+1) :
+            count += 1+var_j-np.abs(j)
+            sum += step_curve[i+j]*(1+var_j-np.abs(j))
         if var_j != 0 :
             curve_copy[i] = sum/count
     return curve_copy
 
+def smooth2(init_curve, step_curve, step, occurences):
+    curve_copy = np.copy(step_curve)
+    j_max = int(pas/100)
+    width_max = (np.max(step_curve)-np.min(step_curve))/2
+    for i in range(pas) :
+        count = 0
+        sum = 0
+        var_j = j_max
+        while not((0 <= i+var_j < pas) and (0 <= i-var_j < pas)) :
+            var_j -= 1
+        while not((np.abs(step_curve[i+var_j]-step_curve[i]) < width_max) and (np.abs(step_curve[i-var_j]-step_curve[i]) < width_max)) :
+            var_j -= 1
+        for j in range(-var_j,var_j+1) :
+            count += 1+var_j-np.abs(j)
+            sum += step_curve[i+j]*(1+var_j-np.abs(j))
+        if var_j != 0 :
+            curve_copy[i] = sum/count
+    list_mult = np.empty(pas)
+    #j_max = 20
+    for i in range(pas) :
+        var_j = j_max
+        while not((0 <= i+var_j < pas) and (0 <= i-var_j < pas)) :
+            var_j -= 1
+        mult = 1
+        fact = 0.1
+        precision = 0.0001
+        above = (np.sum(curve_copy[i-var_j:i+var_j+1]) > np.sum(init_curve[i-var_j:i+var_j+1]))
+        while np.abs(np.sum(curve_copy[i-var_j:i+var_j+1])*mult-np.sum(init_curve[i-var_j:i+var_j+1])) > precision :
+            if np.sum(curve_copy[i-var_j:i+var_j+1])*mult > np.sum(init_curve[i-var_j:i+var_j+1]) :
+                if not above :
+                    fact = fact*0.1
+                    above = True
+                mult -= fact
+            else :
+                if above :
+                    fact = fact*0.1
+                    above = False
+                mult += fact
+        list_mult[i] = mult
+    return curve_copy*smooth(list_mult, 10, 0)
+
 def recur_smooth(step_curve, step, occurences, nb_recur) :
     if nb_recur == 0 :
-        return smooth(step_curve, step, occurences)
+        smoothed_curve = smooth(step_curve, step, occurences)
+        really_smoothed_curve = smoothed_curve
+        j_max = 3
+        for i in range(pas) :
+            var_j = j_max
+            while not((0 <= i+var_j < pas) and (0 <= i-var_j < pas)) :
+                var_j -= 1
+            mult = 1
+            fact = 0.1
+            precision = 0.0001
+            above = (np.sum(smoothed_curve[i-var_j:i+var_j+1]) > np.sum(step_curve[i-var_j:i+var_j+1]))
+            while np.abs(np.sum(smoothed_curve[i-var_j:i+var_j+1])*mult-np.sum(step_curve[i-var_j:i+var_j+1])) > precision :
+                if np.sum(smoothed_curve[i-var_j:i+var_j+1])*mult > np.sum(step_curve[i-var_j:i+var_j+1]) :
+                    if not above :
+                        fact = fact*0.1
+                        above = True
+                    mult -= fact
+                else :
+                    if above :
+                        fact = fact*0.1
+                        above = False
+                    mult += fact
+            really_smoothed_curve[i] = smoothed_curve[i]*mult
+        return really_smoothed_curve
     else :
         return recur_smooth(smooth(step_curve, step, occurences), step, occurences, nb_recur-1)
 
-Tan_ter = recur_smooth(Tan_bis, pas, n, 4)
-Sin_ter = recur_smooth(Sin_bis, pas, n, 4)
+def recur_smooth2(init_curve, step_curve, step, occurences, nb_recur) :
+    if nb_recur == 0 :
+        return smooth2(init_curve, step_curve, step, occurences)
+    else :
+        return recur_smooth2(init_curve, smooth2(init_curve, step_curve, step, occurences), step, occurences, nb_recur-1)
+
+"""
+        mult = 1
+        fact = 0.1
+        precision = 0.001
+        above = (np.sum(smoothed_curve) > np.sum(step_curve))
+        while np.abs(np.sum(smoothed_curve)*mult-np.sum(step_curve)) > precision :
+            if np.sum(smoothed_curve)*mult > np.sum(step_curve) :
+                if not above :
+                    fact = fact*0.1
+                    above = True
+                mult -= fact
+            else :
+                if above :
+                    fact = fact*0.1
+                    above = False
+                mult += fact
+        return smoothed_curve*mult
+"""
+
+
+#Tan_ter = recur_smooth(Tan_bis, pas, n, 6)
+#Tan_terter = recur_smooth(Tan_bis, pas, n, 20)
+Sin_ter = recur_smooth(Sin_bis, pas, n, 6)
 
 im3 = plt.subplot(221)
 im3.scatter(np.power(Sin,2), Tan, s=1, c='green', alpha=0.3)
@@ -113,9 +205,14 @@ im3.text(100, 0.45, r"$x_i\in [-\lambda,\lambda], \ \forall\ i \in \{1,2,3,4\}$"
 im3.text(100, 0.3, r"$a_{ij}\in [\lambda,3], \ \forall\ i,j \in \{1,2,3\}$")
 
 im1 = plt.subplot(223)
-im1.hist(Tan, bins=50, range=(0,2), density=True, label='Density histogram', color='green', alpha=0.3)
-#im1.plot(tan_linspace, Tan_bis)
-im1.plot(tan_linspace, Tan_ter, label='Smoothed distribution', c='green')
+im1.hist(Tan, bins=50, range=(0,tan_max), density=True, label='Density histogram', color='green', alpha=0.3)
+im1.plot(tan_linspace, Tan_bis)
+for i in range(20,21) :
+    Tan_ter = recur_smooth2(Tan_bis, Tan_bis, pas, n, i)
+    im1.plot(tan_linspace, Tan_ter, label="order"+str(i))
+im1.plot(tan_linspace, sm.final_smooth(Tan_bis), label='Smoothed distribution')
+im1.plot(tan_linspace, sm.final_smooth2(Tan_bis), label='No correction')
+#im1.plot(tan_linspace, Tan_ter, label='Smoothed distribution', c='green')
 im1.set_xlabel(r"$\tan(\theta_{12})$")
 im1.set_ylabel(r"Density of occurences")
 im1.grid()
@@ -124,7 +221,7 @@ im1.axvspan(xmin=np.tan(theta_12_exp[3]), xmax=np.tan(theta_12_exp[4]), color='d
 im1.legend()
 
 im2 = plt.subplot(224)
-im2.hist(Sin, bins=50, range=(0,1), density=True, label='Density histogram', color='green', alpha=0.3)
+im2.hist(Sin, bins=np.logspace(0, sin_max, 50), range=(0,sin_max), density=True, label='Density histogram', color='green', alpha=0.3)
 #im2.plot(sin_linspace, Sin_bis)
 im2.plot(sin_linspace, Sin_ter, label='Smoothed distribution', c='green')
 im2.set_xlabel(r"$\sin(\theta_{13})$")
@@ -133,6 +230,7 @@ im2.grid()
 im2.axvline(x=np.sin(theta_13_exp[0]), c="darkred", label=r"bfp NuFIT 5.1 w/o SKM")
 im2.axvspan(xmin=np.sin(theta_13_exp[3]), xmax=np.sin(theta_13_exp[4]), color='darkred', alpha=0.3, label=r"$3\sigma$ NuFIT 5.1 w/o SKM")
 im2.legend()
+im2.set_xscale('log')
 
 #plt.suptitle(r"Low energy model plots, based on pp.65-75 of S. Marciano's Master Thesis")
 plt.show()
