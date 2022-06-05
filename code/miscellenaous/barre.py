@@ -15,14 +15,22 @@ class BarreDeProgression:
         print("\nC'est parti !")
         self.maj()
 
-    def maj(self, pourcentage=0):
+    def maj(self, pourcentage=0, temps=None):
         self.pourcentage = pourcentage
         etapes = int(self.pourcentage / 100 * self.taille)
+
+        if self.pourcentage == 1:
+            self.temps_restant = (time.time() - self.temps) * 99
+            self.temps = time.time()
+            self.pourcentage_precedent = self.pourcentage
 
         if self.pourcentage - self.pourcentage_precedent >= 5:
             self.temps_restant = (time.time() - self.temps) * (100 - pourcentage) / 5
             self.temps = time.time()
             self.pourcentage_precedent = self.pourcentage
+
+        if temps != None and pourcentage >= 1 :
+            self.temps_restant -= temps
 
         temps_restant = self.temps_restant
 
@@ -38,6 +46,10 @@ class BarreDeProgression:
                 temps_restant = format_temps(int(self.temps_restant))
             sys.stdout.write('\r' + self.titre + ' [' + visuel + '] ' + str(
                 int(self.pourcentage)) + '%        Temps restant : ' + temps_restant)
+        sys.stdout.flush()
+
+    def stop(self) :
+        sys.stdout.write('\rTerminé !' + (self.taille + 100) * ' ' + '\n')
         sys.stdout.flush()
 
 
