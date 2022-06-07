@@ -10,17 +10,25 @@ alldf = pd.read_csv("data/alltogether.csv",
                  names = ['phi_22', 'phi_23', 'phi_32', 'x_1', 'x_2', 'x_3',
                  'x_4', 'a_13', 'a_22', 'a_23', 'a_32', 'phiA', 'tan_theta_12',
                  'sin_theta_13', 'precision'])
+"""
+alldf['precision'] = 0
+
+alldf.loc[lambda alldf: (np.power(alldf['sin_theta_13'],2) >= 0.001)
+                        & (np.power(alldf['sin_theta_13'],2) <= 0.035)
+                        & (alldf['tan_theta_12'] >= 0.61)
+                        & (alldf['tan_theta_12'] <= 0.75),
+          'precision'] = 1
+"""
 
 mask_1sigma = (alldf['precision'] == 2)
+mask_3sigma = (alldf['precision'] == 1)
 mask_3sigma = (alldf['precision'] == 1)
 mask_tot = (alldf['precision'] >= 1)
 mask_rest = (alldf['precision'] == 0)
 df = alldf[(alldf['sin_theta_13'] <= 1)]
 
-theta_13_exp = np.array([8.62, 8.5, 8.74, 8.25, 8.98])
-theta_12_exp = np.array([33.45, 32.7, 34.22, 31.27, 35.87])
-theta_13_exp = theta_13_exp*np.pi/180
-theta_12_exp = theta_12_exp*np.pi/180
+theta_13_exp = np.array([8.60, 8.48, 8.72, 8.24, 8.98])*np.pi/180
+theta_12_exp = np.array([33.45, 32.71, 34.22, 31.27, 35.87])*np.pi/180
 
 fig, axs = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(10, 10),
                         gridspec_kw={'height_ratios': [1, 3],
@@ -33,7 +41,7 @@ axs[1, 0].set_xlabel(r"$\sin\theta_{13}$")
 #axs[1, 0].set_xscale('log')
 axs[1, 0].set_ylabel(r"$\tan\theta_{12}$")
 #axs[1, 0].set_xlim(1E-5,2)
-axs[1, 0].set_xlim(-0.1,1.1)
+axs[1, 0].set_xlim(-0.05,1.05)
 axs[1, 0].set_ylim(-0.1,2.2)
 axs[1, 0].grid()
 the_bar = inset_axes(axs[1, 0], width="3%", height="30%", loc=1,
@@ -46,11 +54,12 @@ sns.kdeplot(x=np.power((alldf['sin_theta_13'].iloc[0:100000]),1),
             'label':r'KDE'})
 the_bar.yaxis.set_ticks_position('left')
 the_bar.yaxis.set_label_position('left')
+"""
 axs[1, 0].axhline(y=np.tan(theta_12_exp[0]), c="darkred", label=r"bfp")
 axs[1, 0].axhspan(ymin=np.tan(theta_12_exp[3]), ymax=np.tan(theta_12_exp[4]), color='darkred', alpha=0.3, label=r"$3\sigma$ range")
 axs[1, 0].axvline(x=np.power(np.sin(theta_13_exp[0]),1), c="darkred")
 axs[1, 0].axvspan(xmin=np.power(np.sin(theta_13_exp[3]),1), xmax=np.power(np.sin(theta_13_exp[4]),1), color='darkred', alpha=0.3)
-
+"""
 axs[0, 0].set_ylabel(r"Density of occurences")
 axs[0, 0].set_yticks(np.arange(1, 4.1, 1))
 axs[0, 0].grid()

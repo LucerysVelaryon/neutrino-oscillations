@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as tck
 from math import *
 import numpy as np
 import csv
@@ -10,6 +11,14 @@ df = pd.read_csv("data/alltogether.csv",
                  names = ['phi_22', 'phi_23', 'phi_32', 'x_1', 'x_2', 'x_3',
                  'x_4', 'a_13', 'a_22', 'a_23', 'a_32', 'phiA', 'tan_theta_12',
                  'sin_theta_13', 'precision'])
+
+df['precision'] = 0
+
+df.loc[lambda df: (np.power(df['sin_theta_13'],2) >= 0.001)
+                   & (np.power(df['sin_theta_13'],2) <= 0.035)
+                   & (df['tan_theta_12'] >= 0.61)
+                   & (df['tan_theta_12'] <= 0.75),
+       'precision'] = 1
 
 mask_1sigma = (df['precision'] == 2)
 mask_3sigma = (df['precision'] == 1)

@@ -10,10 +10,10 @@ Delta_m_atm_square = 0.0025 # eV
 m0 = 0.035 # eV
 x = np.sqrt(Delta_m_atm_square/np.power(m0,2)-1)
 
-# NuFIT 5.1 (2021) without SKM
+# NuFIT 5.1 (2021) IO without SKM
 # bfp, 1sigma range, 3sigma range
-theta_13_exp = np.array([8.62, 8.5, 8.74, 8.25, 8.98])*np.pi/180
-theta_12_exp = np.array([33.45, 32.7, 34.22, 31.27, 35.87])*np.pi/180
+theta_13_exp = np.array([8.60, 8.48, 8.72, 8.24, 8.98])*np.pi/180
+theta_12_exp = np.array([33.45, 32.71, 34.22, 31.27, 35.87])*np.pi/180
 
 n = 20000000
 

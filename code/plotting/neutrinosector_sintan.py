@@ -18,10 +18,10 @@ mask_tot = (alldf['precision'] >= 1)
 mask_rest = (alldf['precision'] == 0)
 df = alldf[(alldf['sin_theta_13'] <= 1)]
 
-theta_13_exp = np.array([8.62, 8.5, 8.74, 8.25, 8.98])
-theta_12_exp = np.array([33.45, 32.7, 34.22, 31.27, 35.87])
-theta_13_exp = theta_13_exp*np.pi/180
-theta_12_exp = theta_12_exp*np.pi/180
+# NuFIT 5.1 (2021) IO without SKM
+# bfp, 1sigma range, 3sigma range
+theta_13_exp = np.array([8.60, 8.48, 8.72, 8.24, 8.98])*np.pi/180
+theta_12_exp = np.array([33.45, 32.71, 34.22, 31.27, 35.87])*np.pi/180
 
 fig, axs = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(10, 10),
                         gridspec_kw={'height_ratios': [1, 3],
