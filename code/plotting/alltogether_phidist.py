@@ -7,6 +7,11 @@ import pandas as pd
 import seaborn as sns
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+# NuFIT 5.1 (2021) IO without SKM
+# bfp, 1sigma range, 3sigma range
+theta_13_exp = np.array([8.60, 8.48, 8.72, 8.24, 8.98])*np.pi/180
+theta_12_exp = np.array([33.45, 32.71, 34.22, 31.27, 35.87])*np.pi/180
+
 df = pd.read_csv("data/alltogether.csv",
                  names = ['phi_22', 'phi_23', 'phi_32', 'x_1', 'x_2', 'x_3',
                  'x_4', 'a_13', 'a_22', 'a_23', 'a_32', 'phiA', 'tan_theta_12',
@@ -14,11 +19,17 @@ df = pd.read_csv("data/alltogether.csv",
 
 df['precision'] = 0
 
-df.loc[lambda df: (np.power(df['sin_theta_13'],2) >= 0.001)
-                   & (np.power(df['sin_theta_13'],2) <= 0.035)
-                   & (df['tan_theta_12'] >= 0.61)
-                   & (df['tan_theta_12'] <= 0.75),
-       'precision'] = 1
+df.loc[lambda df: (df['sin_theta_13'] >= np.sin(theta_13_exp[3]))
+                        & (df['sin_theta_13'] <= np.sin(theta_13_exp[4]))
+                        & (df['tan_theta_12'] >= np.tan(theta_12_exp[3]))
+                        & (df['tan_theta_12'] <= np.tan(theta_12_exp[4])),
+          'precision'] = 1
+
+df.loc[lambda df: (df['sin_theta_13'] >= np.sin(theta_13_exp[1]))
+                        & (df['sin_theta_13'] <= np.sin(theta_13_exp[2]))
+                        & (df['tan_theta_12'] >= np.tan(theta_12_exp[1]))
+                        & (df['tan_theta_12'] <= np.tan(theta_12_exp[2])),
+          'precision'] = 2
 
 mask_1sigma = (df['precision'] == 2)
 mask_3sigma = (df['precision'] == 1)
