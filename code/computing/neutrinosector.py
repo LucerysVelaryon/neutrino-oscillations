@@ -33,8 +33,8 @@ for i in range(n):
     x_2 = random.uniform(-llambda,llambda)
     x_3 = random.uniform(-llambda,llambda)
     x_4 = random.uniform(-llambda,llambda)
-    tan_theta_12 = llambda/np.power(1+np.power(x,2),3/2)*(x*x_2+np.power(x,2)*x_3-x_3-x*x_4)
-    sin_theta_13 = 1-(-(1+np.power(x,2))*x_1+x_2+x*(2*x_3+x*x_4))/(2*np.power(1+np.power(x,2),3/2))
+    sin_theta_13 = llambda/np.power(1+np.power(x,2),3/2)*(x*x_2+np.power(x,2)*x_3-x_3-x*x_4)
+    tan_theta_12 = 1-(-(1+np.power(x,2))*x_1+x_2+x*(2*x_3+x*x_4))/(2*np.power(1+np.power(x,2),3/2))
 
     if np.sin(theta_13_exp[1]) < sin_theta_13 < np.sin(theta_13_exp[2]) and np.tan(theta_12_exp[1]) < tan_theta_12 < np.tan(theta_12_exp[2]) :
         precision = 2
