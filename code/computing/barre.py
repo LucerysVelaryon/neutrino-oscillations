@@ -2,17 +2,16 @@ import time
 import sys
 
 class BarreDeProgression:
-    """Cette classe permet de créer des barres de chargement"""
+    """This class is implementing a loading bar to inform the user about the remaining time"""
 
-    def __init__(self, taille=30, titre='Chargement'):
+    def __init__(self, taille=30, titre='Loading'):
         self.taille = taille
         self.titre = titre
         self.pourcentage = 0
         self.pourcentage_precedent = 0
         self.temps = time.time()
-        self.temps_restant = 'Calcul...'
-
-        print("\nC'est parti !")
+        self.temps_restant = 'Computing...'
+        print('\n')
         self.maj()
 
     def maj(self, pourcentage=0, temps=None):
@@ -40,16 +39,16 @@ class BarreDeProgression:
             visuel = etapes * '=' + (self.taille - etapes) * ' '
 
         if self.pourcentage == 100:
-            sys.stdout.write('\rTerminé !' + (self.taille + 100) * ' ' + '\n')
+            sys.stdout.write('\rDone !' + (self.taille + 100) * ' ' + '\n')
         else:
             if type(self.temps_restant) != str:
                 temps_restant = format_temps(int(self.temps_restant))
             sys.stdout.write('\r' + self.titre + ' [' + visuel + '] ' + str(
-                int(self.pourcentage)) + '%        Temps restant : ' + temps_restant)
+                int(self.pourcentage)) + '%        Remaining time : ' + temps_restant)
         sys.stdout.flush()
 
     def stop(self) :
-        sys.stdout.write('\rTerminé !' + (self.taille + 100) * ' ' + '\n')
+        sys.stdout.write('\rDone !' + (self.taille + 100) * ' ' + '\n')
         sys.stdout.flush()
 
 
