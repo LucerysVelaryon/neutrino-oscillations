@@ -10,11 +10,17 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 # bfp, 1sigma range, 3sigma range
 theta_13_exp = np.array([8.60, 8.48, 8.72, 8.24, 8.98])*np.pi/180
 theta_12_exp = np.array([33.45, 32.71, 34.22, 31.27, 35.87])*np.pi/180
-
+"""
 alldf = pd.read_csv("data/alltogether.csv",
                  names = ['phi_22', 'phi_23', 'phi_32', 'x_1', 'x_2', 'x_3',
                  'x_4', 'a_13', 'a_22', 'a_23', 'a_32', 'phiA', 'tan_theta_12',
                  'sin_theta_13', 'precision'])
+
+alldf['tan_theta_12'] = (-4*alldf['a_13']*((1+np.power(1.02,2))/(-alldf['a_23']*alldf['a_32']*np.exp(1j*(2*alldf['phi_22']+alldf['phiA']))+alldf['a_22']*np.exp(1j*(alldf['phi_22']+2*alldf['phiA']))))*np.abs(alldf['a_32']*np.exp(1j*alldf['phi_23'])-alldf['a_22']*1.02*np.exp(1j*alldf['phi_22'])))/(2*np.power(1+np.power(1.02,2),3/2))
+
+alldf['tan_theta_12'] = alldf['a_32']*np.exp(1j*alldf['phi_23'])-alldf['a_22']*1.02*np.exp(1j*alldf['phi_22'])
+
+alldf['tan_theta_12'] = ((1+np.power(1.02,2))/(-alldf['a_23']*alldf['a_32']*np.exp(1j*(2*alldf['phi_22']+alldf['phiA']))+alldf['a_22']*np.exp(1j*(alldf['phi_22']+2*alldf['phiA']))))
 
 alldf['precision'] = 0
 
@@ -29,9 +35,14 @@ alldf.loc[lambda alldf: (alldf['sin_theta_13'] >= np.sin(theta_13_exp[1]))
                         & (alldf['tan_theta_12'] >= np.tan(theta_12_exp[1]))
                         & (alldf['tan_theta_12'] <= np.tan(theta_12_exp[2])),
           'precision'] = 2
+"""
+
+alldf = pd.read_csv("data/numerical.csv", delimiter=' ',
+                 names = ['phi_22', 'phi_23', 'phi_32']+['x_{}'.format(i) for i in range(1,5)]+
+                 ['a_{}{}'.format(i, j) for i in range(1,4) for j in range(1, 4)]+
+                 ['sin_theta_13', 'tan_theta_12', 'tan_theta_23', 'precision'])
 
 mask_1sigma = (alldf['precision'] == 2)
-mask_3sigma = (alldf['precision'] == 1)
 mask_3sigma = (alldf['precision'] == 1)
 mask_tot = (alldf['precision'] >= 1)
 mask_rest = (alldf['precision'] == 0)

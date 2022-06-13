@@ -11,10 +11,11 @@ from exp_data import *
 This algorithm is the core of the project, computing the neutrino mixing angles
 mostly using Simone Marciano's Master Thesis, but also articles on similar
 models by David Meloni and Giorgio Arcadi (see the Overleaf for the refs).
+All the numerical data is then saved in csv files, easy to open using Pandas.
 """
 
 
-def computing(methods = "all", n = 1000) :
+def computing(methods = "all", n = 100000) :
     """
     A loading bar just to see the approximate remaining time.
     """
@@ -36,7 +37,7 @@ def computing(methods = "all", n = 1000) :
 
         """
         Creating additionnal 0-value in array and matrix so that the
-        indexes in the code comply with those in the model.
+        indices in the code comply with those in the model.
         """
         x = [0] + [random.uniform(-2*llambda, 2*llambda) for _ in range(4)]
         a = np.matrix([[0, 0, 0, 0]] + [[0] + [random.uniform(llambda, 10*llambda) for _ in range(3)] for _ in range(3)])
@@ -46,8 +47,9 @@ def computing(methods = "all", n = 1000) :
         """
         a[3,3] = 1
         """
-        No need to compute all 9 possible phases for the computations, so
-        creating three variables to save computationnal time.
+        No need to compute all 9 possible phases for the computings, so
+        creating three variables, instead of the entire matrix,
+        in order to save computationnal time.
         """
         phi_22 = random.uniform(0, 2*np.pi)
         phi_23 = random.uniform(0, 2*np.pi)
@@ -74,7 +76,7 @@ def computing(methods = "all", n = 1000) :
             count += 1
 
         """
-        The following method takes into account the resoning made by Simone
+        The following method takes into account the reasoning made by Simone
         Marciano in his thesis, especially concerning the ranges of the
         parameters of the model, but computes the mixing angles using in a total
         numerical way, i.e. diagonalizing matrices at the end of the reasoning.
@@ -89,11 +91,22 @@ def computing(methods = "all", n = 1000) :
                                              np.power(llambda, 6), np.power(llambda, 2)*np.exp(1j*phi_32), 1])
             """
             The following method used to extract the eigenvectors gives the
-            transposed wanted matrix, so one must tranpose it back.
+            transposed wanted matrix, so one must tranpose it back. This is due
+            to the package SymPy which does not directly give the eigenvectors
+            but a list of tuples of the form :
+                [(eigenvalue, multiplicity, span), ...]
+            where the span is hence a list of eigenvectors associated with the
+            eigenvalue. For my analysis, the multiplicity is always 1.
             """
             U_nu = sp.Matrix([list(tup[2][0]) for tup in (m_nu*m_nu.H).eigenvects()]).transpose()
             U_l = sp.Matrix([list(tup[2][0]) for tup in (m_l*m_l.H).eigenvects()]).transpose()
             U_PMNS = U_l.H*U_nu
+            """
+            Warning, due to Python, the indices of the U_PMNS terms used for the
+            computing of the angles are minus 1 the one used in theoretical
+            formulae in the literature (U_13 in an article wil be U_02 in this
+            code).
+            """
             tan_theta_12 = np.abs(U_PMNS[0,1])/np.abs(U_PMNS[0,0])
             sin_theta_13 = np.abs(U_PMNS[0,2])
             tan_theta_23 = np.abs(U_PMNS[1,2])/np.abs(U_PMNS[2,2])

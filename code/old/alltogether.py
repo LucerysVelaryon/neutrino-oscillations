@@ -50,7 +50,7 @@ for i in range(n):
         precision = 1
 
     l = [phi_22, phi_23, phi_32, x_1, x_2, x_3, x_4, a_13, a_22, a_23, a_32, phiA, tan_theta_12, sin_theta_13, precision]
-    pickle.dump(l, file)
+    csv_writer.writerow(l)
 
     temps = time.time()-temps
     barre.maj(i*100/n, temps)
