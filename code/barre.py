@@ -1,8 +1,11 @@
 import time
 import sys
 
+""" This class is implementing a loading bar to inform the user about the
+remaining time. It was initially written in French for an other project so some
+variables are still written in French. """
+
 class BarreDeProgression:
-    """This class is implementing a loading bar to inform the user about the remaining time"""
 
     def __init__(self, taille=30, titre='Loading'):
         self.taille = taille
