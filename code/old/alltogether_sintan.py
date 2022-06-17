@@ -6,10 +6,36 @@ import pandas as pd
 import seaborn as sns
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-# NuFIT 5.1 (2021) IO without SKM
-# bfp, 1sigma range, 3sigma range
-theta_13_exp = np.array([8.60, 8.48, 8.72, 8.24, 8.98])*np.pi/180
-theta_12_exp = np.array([33.45, 32.71, 34.22, 31.27, 35.87])*np.pi/180
+"""
+Particle Data Group (2022)
+--------------------------
+bfp
+"""
+mtau = 1776.86e6 # ev
+
+"""
+Super-Kamiokande IV (2019)
+--------------------------
+bfp
+"""
+Delta_m_atm_square = 0.00253 # eV
+
+"""
+NuFIT 5.1 (2021) IO without SK-atm
+----------------------------------
+angle = array(bfp, 1sigma-, 1sigma+, 3sigma-, 3sigma+)
+"""
+theta_13_exp = np.array([8.60, 8.48, 8.72, 8.24, 8.98])*np.pi/180 # rad
+theta_12_exp = np.array([33.45, 32.71, 34.22, 31.27, 35.87])*np.pi/180 # rad
+theta_23_exp = np.array([49.5, 48.3, 50.5, 39.8, 52.1])*np.pi/180 # rad
+
+"""
+Simone Marcinano's model
+------------------------
+"""
+llambda = 0.22 # angle of Cabibbo
+m0 = 0.035 # eV
+X = np.sqrt(Delta_m_atm_square/np.power(m0,2)-1)
 """
 alldf = pd.read_csv("data/alltogether.csv",
                  names = ['phi_22', 'phi_23', 'phi_32', 'x_1', 'x_2', 'x_3',
@@ -41,6 +67,11 @@ alldf = pd.read_csv("data/numerical.csv", delimiter=' ',
                  names = ['phi_22', 'phi_23', 'phi_32']+['x_{}'.format(i) for i in range(1,5)]+
                  ['a_{}{}'.format(i, j) for i in range(1,4) for j in range(1, 4)]+
                  ['sin_theta_13', 'tan_theta_12', 'tan_theta_23', 'precision'])
+
+alldf = alldf[(alldf['x_1'] >= -llambda) & (alldf['x_1'] <= llambda) &
+              (alldf['x_2'] >= -llambda) & (alldf['x_2'] <= llambda) &
+              (alldf['x_3'] >= -llambda) & (alldf['x_3'] <= llambda) &
+              (alldf['x_4'] >= -llambda) & (alldf['x_4'] <= llambda)]
 
 mask_1sigma = (alldf['precision'] == 2)
 mask_3sigma = (alldf['precision'] == 1)
