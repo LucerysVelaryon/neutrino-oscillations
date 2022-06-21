@@ -31,19 +31,22 @@ def compute(methods=ALL_METHODS, n=100000):
 
         # Creating additionnal 0-value in array and matrix so that the indices
         # in the code comply with those in the model.
-        x = [0] + [random.uniform(ranges['x_{}'.format(i)][0],
-                   ranges['x_{}'.format(i)][1]) for i in range(1, 5)]
-        a = np.matrix(
-            [[0]*4] + [[0]+[random.uniform(ranges['a_{}{}'.format(i, j)][0],
-            ranges['a_{}{}'.format(i, j)][1]) for i in range(1, 4)]
-            for j in range(1, 4)]
-            )
+        x = [0] + [random.uniform(DEFAULT_RANGES['x_{}'.format(i)][0],
+                   DEFAULT_RANGES['x_{}'.format(i)][1]) for i in range(1, 5)]
+        a = np.matrix([[0]*4] + [
+            [0]+[random.uniform(DEFAULT_RANGES['a_{}{}'.format(i, j)][0],
+            DEFAULT_RANGES['a_{}{}'.format(i, j)][1]) for i in range(1, 4)]
+            for j in range(1, 4)
+            ])
         # No need to compute all 9 possible phases for the computings, so
         # creating three variables, instead of the entire matrix, in order to
         # save computationnal time.
-        phi_22 = random.uniform(ranges['phi_22'][0], ranges['phi_22'][1])
-        phi_23 = random.uniform(ranges['phi_23'][0], ranges['phi_23'][1])
-        phi_32 = random.uniform(ranges['phi_32'][0], ranges['phi_32'][1])
+        phi_22 = random.uniform(DEFAULT_RANGES['phi_22'][0],
+                                DEFAULT_RANGES['phi_22'][1])
+        phi_23 = random.uniform(DEFAULT_RANGES['phi_23'][0],
+                                DEFAULT_RANGES['phi_23'][1])
+        phi_32 = random.uniform(DEFAULT_RANGES['phi_32'][0],
+                                DEFAULT_RANGES['phi_32'][1])
 
         # The two following methods use the analytical formulae computed by
         # Simone Marciano in his thesis, without and with taking into account
@@ -89,7 +92,8 @@ def compute(methods=ALL_METHODS, n=100000):
                 ])
             m_l = sp.Matrix(3, 3, [
                 a[1,1]*np.power(LAMBDA, 5),
-                a[1,2]* np.power(LAMBDA, 3), a[1,3]*LAMBDA,
+                a[1,2]* np.power(LAMBDA, 3),
+                a[1,3]*LAMBDA,
                 a[2,1]*np.power(LAMBDA, 6),
                 a[2,2]*np.power(LAMBDA, 2) * np.exp(1j*phi_22),
                 a[2,3]*np.exp(1j*phi_23),
@@ -104,12 +108,20 @@ def compute(methods=ALL_METHODS, n=100000):
             #     [(eigenvalue, multiplicity, span), ...]
             # where the span is hence a list of eigenvectors associated with
             # the eigenvalue. For my analysis, the multiplicity is always 1.
-            U_nu = sp.Matrix(
-                [list(tup[2][0]) for tup in (m_nu * m_nu.H).eigenvects()]
-                ).transpose()
-            U_l = sp.Matrix(
-                [list(tup[2][0]) for tup in (m_l * m_l.H).eigenvects()]
-                ).transpose()
+            # For the following matrices, an order in the eigenvalues, hence in
+            # the eigenvectors, must be chosen to define a unique U_nu (resp.
+            # U_l) matrix.
+            # For U_nu, IH is assumed : m1 > m2 >> m3.
+            # For U_l, the known charged lepton masses and the definition of
+            # m_l imposes ma = m_e < mb = m_mu < mc = m_tau.
+            U_nu = sp.Matrix([
+                list(tup[2][0]) for tup in sorted((m_nu * m_nu.H).eigenvects(),
+                key=lambda e: complex(e[0]).real, reverse=True)
+                ]).transpose()
+            U_l = sp.Matrix([
+                list(tup[2][0]) for tup in sorted((m_l * m_l.H).eigenvects(),
+                key=lambda e: complex(e[0]).real)
+                ]).transpose()
             U_PMNS = U_l.H * U_nu
             # Warning, due to Python, the indices of the U_PMNS terms used for
             # the computing of the angles are minus 1 the one used in
