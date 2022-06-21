@@ -19,17 +19,21 @@ def load_distributions(methods=ALL_METHODS):
             dataframes[m].loc[:, 'tan_theta_23'] = np.tan(THETA_23_EXP[0])
         dataframes[m]['precision'] = 0
         dataframes[m].loc[
-            lambda df: (df['sin_theta_13'] >= np.sin(THETA_13_EXP[3]))
-            & (df['sin_theta_13'] <= np.sin(THETA_13_EXP[4]))
-            & (df['tan_theta_12'] >= np.tan(THETA_12_EXP[3]))
-            & (df['tan_theta_12'] <= np.tan(THETA_12_EXP[4])),
+            lambda df: (df['tan_theta_12'] >= ANGLES['tan_theta_12'][3])
+            & (df['tan_theta_12'] <= ANGLES['tan_theta_12'][4])
+            & (df['sin_theta_13'] >= ANGLES['sin_theta_13'][3])
+            & (df['sin_theta_13'] <= ANGLES['sin_theta_13'][4])
+            & (df['tan_theta_23'] >= ANGLES['tan_theta_23'][3])
+            & (df['tan_theta_23'] <= ANGLES['tan_theta_23'][4]),
             'precision'
             ] = 1
         dataframes[m].loc[
-            lambda df: (df['sin_theta_13'] >= np.sin(THETA_13_EXP[1]))
-            & (df['sin_theta_13'] <= np.sin(THETA_13_EXP[2]))
-            & (df['tan_theta_12'] >= np.tan(THETA_12_EXP[1]))
-            & (df['tan_theta_12'] <= np.tan(THETA_12_EXP[2])),
+            lambda df: (df['tan_theta_12'] >= ANGLES['tan_theta_12'][1])
+            & (df['tan_theta_12'] <= ANGLES['tan_theta_12'][2])
+            & (df['sin_theta_13'] >= ANGLES['sin_theta_13'][1])
+            & (df['sin_theta_13'] <= ANGLES['sin_theta_13'][2])
+            & (df['tan_theta_23'] >= ANGLES['tan_theta_23'][1])
+            & (df['tan_theta_23'] <= ANGLES['tan_theta_23'][2]),
             'precision'
             ] = 2
     return dataframes
@@ -242,9 +246,3 @@ def plot_two_parameters(method, dataframe, parameters, logs=(False, False),
         + after[0] + '_' + before[1] + parameters[1].replace('_', '') + after[1]
         + '.svg', format='svg', bbox_inches='tight'
         )
-
-
-"""
-    axs[0, 0].set_yticks(np.arange(1, 4.1, 1))
-    axs[1, 1].set_xticks(np.arange(0.2, 2, 0.4))
-"""
